@@ -6,7 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import {
     createFirestoreInstance,
     getFirestore,
-    reduxFirestore
+    reduxFirestore,
 } from 'redux-firestore';
 import { ReactReduxFirebaseProvider, getFirebase } from 'react-redux-firebase';
 import thunk from 'redux-thunk';
@@ -29,7 +29,7 @@ const rrfProps = {
     firebase,
     config: fbConfig,
     dispatch: createStoreWithMiddleware.dispatch,
-    createFirestoreInstance
+    createFirestoreInstance,
 };
 
 const app = (

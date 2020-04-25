@@ -1,5 +1,8 @@
 import * as actionTypes from './actions';
 import config from './../config';
+import { combineReducers } from 'redux';
+import { firestoreReducer } from 'redux-firestore';
+import { firebaseReducer } from 'react-redux-firebase';
 
 const initialState = {
     isOpen: [], //for active default menu
@@ -16,7 +19,7 @@ const reducer = (state = initialState, action) => {
         case actionTypes.COLLAPSE_MENU:
             return {
                 ...state,
-                collapseMenu: !state.collapseMenu
+                collapseMenu: !state.collapseMenu,
             };
         case actionTypes.COLLAPSE_TOGGLE:
             if (action.menu.type === 'sub') {
@@ -25,8 +28,8 @@ const reducer = (state = initialState, action) => {
 
                 const triggerIndex = trigger.indexOf(action.menu.id);
                 if (triggerIndex > -1) {
-                    open = open.filter(item => item !== action.menu.id);
-                    trigger = trigger.filter(item => item !== action.menu.id);
+                    open = open.filter((item) => item !== action.menu.id);
+                    trigger = trigger.filter((item) => item !== action.menu.id);
                 }
 
                 if (triggerIndex === -1) {
@@ -35,15 +38,15 @@ const reducer = (state = initialState, action) => {
                 }
             } else {
                 open = state.isOpen;
-                const triggerIndex = (state.isTrigger).indexOf(action.menu.id);
-                trigger = (triggerIndex === -1) ? [action.menu.id] : [];
-                open = (triggerIndex === -1) ? [action.menu.id] : [];
+                const triggerIndex = state.isTrigger.indexOf(action.menu.id);
+                trigger = triggerIndex === -1 ? [action.menu.id] : [];
+                open = triggerIndex === -1 ? [action.menu.id] : [];
             }
 
             return {
                 ...state,
                 isOpen: open,
-                isTrigger: trigger
+                isTrigger: trigger,
             };
         case actionTypes.NAV_CONTENT_LEAVE:
             return {
@@ -58,8 +61,8 @@ const reducer = (state = initialState, action) => {
 
                 const triggerIndex = trigger.indexOf(action.menu.id);
                 if (triggerIndex > -1) {
-                    open = open.filter(item => item !== action.menu.id);
-                    trigger = trigger.filter(item => item !== action.menu.id);
+                    open = open.filter((item) => item !== action.menu.id);
+                    trigger = trigger.filter((item) => item !== action.menu.id);
                 }
                 return {
                     ...state,
@@ -67,25 +70,58 @@ const reducer = (state = initialState, action) => {
                     isTrigger: trigger,
                 };
             }
-            return {...state};
-        case actionTypes.FULL_SCREEN :
+            return { ...state };
+        case actionTypes.FULL_SCREEN:
             return {
                 ...state,
-                isFullScreen: !state.isFullScreen
+                isFullScreen: !state.isFullScreen,
             };
         case actionTypes.FULL_SCREEN_EXIT:
             return {
                 ...state,
-                isFullScreen: false
+                isFullScreen: false,
             };
         case actionTypes.CHANGE_LAYOUT:
             return {
                 ...state,
-                layout: action.layout
+                layout: action.layout,
             };
         default:
             return state;
     }
 };
-
-export default reducer;
+const initAuth = { authError: null };
+const authReducer = (state = initAuth, action) => {
+    switch (action.type) {
+        case actionTypes.LOGIN_ERROR:
+            return {
+                ...state,
+                authError: 'Login failed',
+            };
+        case actionTypes.LOGIN_SUCCESS:
+            return {
+                ...state,
+                authError: null,
+            };
+        case actionTypes.SIGNUP_SUCCESS:
+            return {
+                ...state,
+                authError: null,
+            };
+        case actionTypes.SIGNUP_ERROR:
+            return {
+                ...state,
+                authError: action.err.message,
+            };
+        case actionTypes.SIGNOUT_SUCCCESS:
+            return state;
+        default:
+            return state;
+    }
+};
+export default combineReducers({
+    appState: reducer,
+    auth: authReducer,
+    firestore: firestoreReducer,
+    firebase: firebaseReducer,
+});

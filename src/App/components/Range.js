@@ -5,8 +5,10 @@ import styled from 'styled-components';
 import { Range as ReactRange, getTrackBackground } from 'react-range';
 
 const Container = styled.div`
-    margin: 10px;
-    width: 50%;
+    margin: ${({ first }) => (first ? '0px 10px 10px 10px' : '10px')};
+    border: 1.5px solid ${({ color }) => `hsl(${color} 60%)`};
+    padding: 20px;
+    border-radius: 7px;
 `;
 
 const InfoContainer = styled.div`
@@ -17,18 +19,22 @@ const InfoContainer = styled.div`
 const Label = styled.h5`
     display: flex;
 `;
-const Value = styled.h5`
+const Value = styled.h6`
+    font-size: 17px;
+    font-weight: 400;
     margin: 0 auto;
 `;
 const InfoDesc = styled.h5`
-    font-size: 14px;
+    font-size: 13px;
     width: 300px;
     text-align: ${({ alignRight }) => alignRight && 'right'};
 `;
 
-const Range = ({ title, color }) => {
-    const [values, setValues] = useState([50]);
+const Range = ({ id, title, color, minDesc, maxDesc, first, currentValue }) => {
+    const [values, setValues] = useState([0]);
+
     let currColor = values;
+
     if (values[0] <= 20) {
         currColor = [20];
     } else if (values[0] >= 70) {
@@ -36,15 +42,15 @@ const Range = ({ title, color }) => {
     } else {
         currColor = values;
     }
-    console.log(currColor);
 
+    currentValue(values[0], id);
     return (
-        <Container>
+        <Container color={color} first={first}>
             <Label>{title}</Label>
             <InfoContainer>
-                <InfoDesc>0% – Wyczerpany</InfoDesc>
+                <InfoDesc>0% – {minDesc}</InfoDesc>
                 <Value>{values[0]}%</Value>
-                <InfoDesc alignRight>Mogę przebiec 6000km – 100%</InfoDesc>
+                <InfoDesc alignRight>{maxDesc} – 100%</InfoDesc>
             </InfoContainer>
 
             <ReactRange

@@ -1,17 +1,16 @@
 import React, { Component } from 'react';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import windowSize from 'react-window-size';
 
 import NavLogo from './NavLogo';
 import NavContent from './NavContent';
 import OutsideClick from './OutsideClick';
-import Aux from './../../../../hoc/_Aux'
+import Aux from './../../../../hoc/_Aux';
 import * as actionTypes from './../../../../store/actions';
 import navigation from '../../../../menu-items';
 
 class Navigation extends Component {
-
     resize = () => {
         const contentWidth = document.getElementById('root').clientWidth;
 
@@ -22,19 +21,22 @@ class Navigation extends Component {
 
     componentDidMount() {
         this.resize();
-        window.addEventListener('resize', this.resize)
+        window.addEventListener('resize', this.resize);
     }
 
     componentWillUnmount() {
-        window.removeEventListener('resize', this.resize)
+        window.removeEventListener('resize', this.resize);
     }
 
     render() {
-        let navClass = [
-            'pcoded-navbar',
-        ];
+        let navClass = ['pcoded-navbar'];
 
-        if (this.props.preLayout !== null && this.props.preLayout !== '' && this.props.preLayout !== 'layout-6' && this.props.preLayout !== 'layout-8') {
+        if (
+            this.props.preLayout !== null &&
+            this.props.preLayout !== '' &&
+            this.props.preLayout !== 'layout-6' &&
+            this.props.preLayout !== 'layout-8'
+        ) {
             navClass = [...navClass, this.props.preLayout];
         } else {
             navClass = [
@@ -42,10 +44,10 @@ class Navigation extends Component {
                 this.props.layoutType,
                 this.props.navBackColor,
                 this.props.navBrandColor,
-                'drp-icon-'+this.props.navDropdownIcon,
-                'menu-item-icon-'+this.props.navListIcon,
+                'drp-icon-' + this.props.navDropdownIcon,
+                'menu-item-icon-' + this.props.navListIcon,
                 this.props.navActiveListColor,
-                this.props.navListTitleColor,
+                this.props.navListTitleColor
             ];
 
             if (this.props.layout === 'horizontal') {
@@ -107,7 +109,11 @@ class Navigation extends Component {
 
         let navContent = (
             <div className="navbar-wrapper">
-                <NavLogo collapseMenu={this.props.collapseMenu} windowWidth={this.props.windowWidth} onToggleNavigation={this.props.onToggleNavigation} />
+                <NavLogo
+                    collapseMenu={this.props.collapseMenu}
+                    windowWidth={this.props.windowWidth}
+                    onToggleNavigation={this.props.onToggleNavigation}
+                />
                 <NavContent navigation={navigation.items} />
             </div>
         );
@@ -115,7 +121,11 @@ class Navigation extends Component {
             navContent = (
                 <OutsideClick>
                     <div className="navbar-wrapper">
-                        <NavLogo collapseMenu={this.props.collapseMenu} windowWidth={this.props.windowWidth} onToggleNavigation={this.props.onToggleNavigation} />
+                        <NavLogo
+                            collapseMenu={this.props.collapseMenu}
+                            windowWidth={this.props.windowWidth}
+                            onToggleNavigation={this.props.onToggleNavigation}
+                        />
                         <NavContent navigation={navigation.items} />
                     </div>
                 </OutsideClick>
@@ -124,9 +134,7 @@ class Navigation extends Component {
 
         return (
             <Aux>
-                <nav className={navClass.join(' ')}>
-                    {navContent}
-                </nav>
+                <nav className={navClass.join(' ')}>{navContent}</nav>
             </Aux>
         );
     }
@@ -134,32 +142,35 @@ class Navigation extends Component {
 
 const mapStateToProps = state => {
     return {
-        layout: state.layout,
-        preLayout: state.preLayout,
-        collapseMenu: state.collapseMenu,
-        layoutType: state.layoutType,
-        navBackColor: state.navBackColor,
-        navBackImage: state.navBackImage,
-        navIconColor: state.navIconColor,
-        navBrandColor: state.navBrandColor,
-        layout6Background: state.layout6Background,
-        layout6BackSize: state.layout6BackSize,
-        rtlLayout: state.rtlLayout,
-        navFixedLayout: state.navFixedLayout,
-        boxLayout: state.boxLayout,
-        navDropdownIcon: state.navDropdownIcon,
-        navListIcon: state.navListIcon,
-        navActiveListColor: state.navActiveListColor,
-        navListTitleColor: state.navListTitleColor,
-        navListTitleHide: state.navListTitleHide
-    }
+        layout: state.appState.layout,
+        preLayout: state.appState.preLayout,
+        collapseMenu: state.appState.collapseMenu,
+        layoutType: state.appState.layoutType,
+        navBackColor: state.appState.navBackColor,
+        navBackImage: state.appState.navBackImage,
+        navIconColor: state.appState.navIconColor,
+        navBrandColor: state.appState.navBrandColor,
+        layout6Background: state.appState.layout6Background,
+        layout6BackSize: state.appState.layout6BackSize,
+        rtlLayout: state.appState.rtlLayout,
+        navFixedLayout: state.appState.navFixedLayout,
+        boxLayout: state.appState.boxLayout,
+        navDropdownIcon: state.appState.navDropdownIcon,
+        navListIcon: state.appState.navListIcon,
+        navActiveListColor: state.appState.navActiveListColor,
+        navListTitleColor: state.appState.navListTitleColor,
+        navListTitleHide: state.appState.navListTitleHide
+    };
 };
 
 const mapDispatchToProps = dispatch => {
     return {
-        onToggleNavigation: () => dispatch({type: actionTypes.COLLAPSE_MENU}),
-        onChangeLayout: (layout) => dispatch({type: actionTypes.CHANGE_LAYOUT, layout: layout}),
-    }
+        onToggleNavigation: () => dispatch({ type: actionTypes.COLLAPSE_MENU }),
+        onChangeLayout: layout =>
+            dispatch({ type: actionTypes.CHANGE_LAYOUT, layout: layout })
+    };
 };
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(windowSize(Navigation)));
+export default withRouter(
+    connect(mapStateToProps, mapDispatchToProps)(windowSize(Navigation))
+);

@@ -1,30 +1,180 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import Aux from '../../hoc/_Aux';
 import Range from '../../App/components/Range';
+import { Form, Button, Alert } from 'react-bootstrap';
+import { connect } from 'react-redux';
+import { addZg } from '../../store/actions';
+import { firestoreConnect } from 'react-redux-firebase';
+import { compose } from 'redux';
+import Swal from 'sweetalert2';
+import moment from 'moment';
+import { Redirect } from 'react-router-dom';
 
-class Dashboard extends React.Component {
-    render() {
-        return (
-            <Aux>
-                <Range color="109, 53%," title="Koncentracja">
-                    {this.props.values}
-                </Range>
-                <Range color="211, 56%," title="Energia">
-                    {this.props.values}
-                </Range>
-                <Range color="58, 87%," title="Spokój/Opanowanie">
-                    {this.props.values}
-                </Range>
-                <Range color="0, 85%," title="Siła woli">
-                    {this.props.values}
-                </Range>
-                <Range color="25, 100%," title="Samopoczucie">
-                    {this.props.values}
-                </Range>
-            </Aux>
-        );
-    }
-}
+const Container = styled.div`
+    display: flex;
+`;
+const InfoSection = styled.div`
+    width: 50%;
+`;
+const RangeContainer = styled.div`
+    width: 50%;
+`;
+const ItemContainer = styled.div`
+    margin: 30px 0;
+`;
 
-export default Dashboard;
+const Label = styled.h6`
+    font-size: 17px;
+    font-weight: 400;
+    margin-bottom: 10px;
+`;
+const StyledButton = styled(Button)`
+    width: 100%;
+`;
+const Dashboard = (props) => {
+    const [breakId, setBreakId] = useState(0);
+    const [note, setNote] = useState('');
+    const [isGold, setIsGold] = useState(false);
+    const [alert, setAlert] = useState(false);
+
+    const rangeData = {};
+
+    const currentValue = (currVal, id) => {
+        rangeData[id] = currVal;
+    };
+
+    const handleSubmit = () => {
+        const zg = {
+            rangeData,
+            breakId,
+            note,
+            isGold,
+        };
+        props.addZg(zg);
+        setBreakId(0);
+        setNote('');
+        setIsGold(false);
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Zapisano',
+            backdrop: false,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true,
+        });
+    };
+    // if(props.auth.uid){}
+    // if(!props.auth.uid) {
+    //     return <Redirect to="/auth/signin-1">
+    // }
+
+    return (
+        <Aux>
+            {!props.auth.uid && <Redirect to="/auth/signin-1" />}
+            <Container>
+                <RangeContainer>
+                    {props.listOfItemsToMonitoring &&
+                        props.listOfItemsToMonitoring.map(
+                            ({ id, color, title, minDesc, maxDesc }, index) => {
+                                return (
+                                    <Range
+                                        first={index === 0}
+                                        id={id}
+                                        color={color}
+                                        title={title}
+                                        minDesc={minDesc}
+                                        maxDesc={maxDesc}
+                                        currentValue={currentValue}
+                                    />
+                                );
+                            }
+                        )}
+                </RangeContainer>
+                <InfoSection>
+                    <ItemContainer>
+                        <Label>Poprzednia przerwa</Label>
+                        <Form.Control
+                            as="select"
+                            className="mb-3"
+                            onChange={(e) => setBreakId(e.target.value)}>
+                            <option>Default select</option>
+                            {props.breaks &&
+                                props.breaks.map(({ id, name }) => (
+                                    <option key={id} value={id}>
+                                        {name}
+                                    </option>
+                                ))}
+                        </Form.Control>
+                    </ItemContainer>
+                    <ItemContainer>
+                        <Form.Check
+                            custom
+                            type="checkbox"
+                            id="checkbox1"
+                            label="Czy była to złota godzina ?"
+                            onChange={(e) => setIsGold(e.target.checked)}
+                        />
+                    </ItemContainer>
+                    <ItemContainer>
+                        <Label>Notka</Label>
+                        <Form.Control
+                            as="textarea"
+                            rows="3"
+                            onChange={(e) => setNote(e.target.value)}
+                        />
+                    </ItemContainer>
+                    <div
+                        aria-live="polite"
+                        aria-atomic="true"
+                        style={{
+                            position: 'relative',
+                            minHeight: '100px',
+                        }}
+                    />
+
+                    <StyledButton variant="primary" onClick={handleSubmit}>
+                        Zapisz
+                    </StyledButton>
+                </InfoSection>
+            </Container>
+            {alert && (
+                <Alert
+                    variant="success"
+                    onDismiss={() => setAlert(false)}
+                    style={{
+                        position: 'absolute',
+                        top: '0px',
+                        right: '15px',
+                        width: '300px',
+                    }}>
+                    Dodano
+                </Alert>
+            )}
+        </Aux>
+    );
+};
+const mapStateToProps = (state) => {
+    return {
+        breaks: state.firestore.ordered.breaks,
+        listOfItemsToMonitoring: state.firestore.ordered.monitoring,
+        auth: state.firebase.auth,
+    };
+};
+export default compose(
+    connect(
+        mapStateToProps,
+        { addZg }
+    ),
+    firestoreConnect([
+        {
+            collection: 'breaks',
+        },
+        {
+            collection: 'monitoring',
+        },
+    ])
+)(Dashboard);

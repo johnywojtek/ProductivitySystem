@@ -9,7 +9,7 @@ var firebaseConfig = {
     projectId: 'ewsproject-2c7fe',
     storageBucket: 'ewsproject-2c7fe.appspot.com',
     messagingSenderId: '1082461674219',
-    appId: '1:1082461674219:web:b1580d6c438c7f47fa3cae'
+    appId: '1:1082461674219:web:b1580d6c438c7f47fa3cae',
 };
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
