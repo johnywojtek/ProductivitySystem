@@ -4,14 +4,14 @@ import styled from 'styled-components';
 import { FaCheck, FaPlus } from 'react-icons/fa';
 import Aux from '../../hoc/_Aux';
 import Task from '../../App/components/Task';
-import { addTask } from '../../store/actions';
+import { addTask, reorderTasks } from '../../store/actions';
 import { connect } from 'react-redux';
 import { firestoreConnect } from 'react-redux-firebase';
 import { compose } from 'redux';
 import Swal from 'sweetalert2';
-import Backend from 'react-dnd-html5-backend';
-import { DndProvider } from 'react-dnd';
-import update from 'immutability-helper';
+import moment from 'moment';
+
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 const InputContainer = styled.div`
     display: flex;
@@ -38,13 +38,33 @@ const Input = styled.input`
     border: none;
     font-size: 0.8rem;
 `;
+const listContainer = styled.div`
+    width: 100%;
+    padding: 2rem;
+`;
 const Dashboard = (props) => {
     const [taskValue, setTaskValue] = useState('');
     const [key, setKey] = useState(1);
+    const [items, setItems] = useState([]);
+    const [taskId, setTaskId] = useState(null);
 
     const onTaskSubmit = () => {
         if (taskValue.length > 0) {
-            props.addTask(taskValue, key);
+            let newItems = [];
+            const newItem = {
+                id: Date.now() + Math.random() + '',
+                value: taskValue,
+                done: false,
+                createdAt: moment().format(),
+            };
+            if (items.length) {
+                newItems = [...items, newItem];
+            } else {
+                newItems = [newItem];
+            }
+
+            props.addTask(newItems, taskId);
+
             setTaskValue('');
         } else {
             Swal.fire({
@@ -62,6 +82,16 @@ const Dashboard = (props) => {
     // prawdopodobnie do zmiany poniewa tworzy wiele instancji listenera
     useEffect(
         () => {
+            if (props.tasks) {
+                const item = props.tasks.find((e) => e.dayId == key);
+                setItems(item.tasks);
+                setTaskId(item.id);
+            }
+        },
+        [props.tasks, key]
+    );
+    useEffect(
+        () => {
             const listener = (event) => {
                 if (event.code === 'Enter' || event.code === 'NumpadEnter') {
                     onTaskSubmit();
@@ -75,64 +105,59 @@ const Dashboard = (props) => {
         [onTaskSubmit]
     );
 
-    const panel = [
-        { id: 1, name: 'poniedziałek' },
-        { id: 2, name: 'wtorek' },
-        { id: 3, name: 'środa' },
-        { id: 4, name: 'czwartek' },
-        { id: 5, name: 'piątek' },
-        { id: 6, name: 'sobota' },
-        { id: 7, name: 'niedziela' },
-        { id: 8, name: 'Projekt EWS' },
-        { id: 9, name: 'Kalendarz' },
-        { id: 10, name: 'Projekt Neuron Foundation' },
-        { id: 11, name: 'Projekt ERP' },
-        { id: 12, name: 'Projekt BY' },
-        { id: 13, name: 'Okno nauki' },
-        { id: 14, name: 'Angielski' },
-        { id: 15, name: 'Nauka' },
-    ];
-    const [cards, setCards] = useState([
-        {
-            id: 1,
-            value: 'Write a cool JS library',
-        },
-        {
-            id: 2,
-            value: 'Make it generic enough',
-        },
-        {
-            id: 3,
-            value: 'Write README',
-        },
-        {
-            id: 4,
-            value: 'Create some examples',
-        },
-        {
-            id: 5,
-            value:
-                'Spam in Twitter and IRC to promote it (note that this element is taller than the others)',
-        },
-        {
-            id: 6,
-            value: '???',
-        },
-        {
-            id: 7,
-            value: 'PROFIT',
-        },
-    ]);
-    const moveCard = (dragIndex, hoverIndex) => {
-        const dragCard = cards[dragIndex];
-        console.log(dragCard);
+    const reorder = (list, startIndex, endIndex) => {
+        const result = Array.from(list);
+        const [removed] = result.splice(startIndex, 1);
+        result.splice(endIndex, 0, removed);
 
-        setCards(
-            update(cards, {
-                $splice: [[dragIndex, 1], [hoverIndex, 0, dragCard]],
-            })
-        );
+        props.reorderTasks(result, taskId);
+        return result;
     };
+
+    const grid = 4;
+
+    const getItemStyle = (isDragging, draggableStyle) => ({
+        // some basic styles to make the items look a bit nicer
+        userSelect: 'none',
+        padding: grid * 2,
+        margin: `0 0 ${grid}px 0`,
+
+        // change background colour if dragging
+        background: isDragging ? 'lightgreen' : '#fff',
+
+        // styles we need to apply on draggables
+        ...draggableStyle,
+    });
+
+    const getListStyle = (isDraggingOver) => ({
+        background: isDraggingOver ? 'lightblue' : 'lightgrey',
+        padding: grid,
+        width: '100%',
+    });
+    const onDragEnd = (result) => {
+        // dropped outside the list
+        if (!result.destination) {
+            return;
+        }
+
+        const updatedItems = reorder(
+            items,
+            result.source.index,
+            result.destination.index
+        );
+
+        setItems(updatedItems);
+    };
+    const panel = [
+        { id: 0, name: 'poniedziałek' },
+        { id: 1, name: 'wtorek' },
+        { id: 2, name: 'środa' },
+        { id: 3, name: 'czwartek' },
+        { id: 4, name: 'piątek' },
+        { id: 5, name: 'sobota' },
+        { id: 6, name: 'niedziela' },
+    ];
+
     return (
         <Aux>
             <Tab.Container
@@ -155,32 +180,7 @@ const Dashboard = (props) => {
                     <Col sm={9}>
                         <Tab.Content activeKey={key}>
                             <SplitButton
-                                onClick={() => {
-                                    props.addTask(
-                                        'Zapisuje strony które obejrzę na małej karteczce',
-                                        key
-                                    );
-                                    props.addTask(
-                                        'Oglądam okno 20min 2x lub 1.75x + zaznaczam bookmarki',
-                                        key
-                                    );
-                                    props.addTask(
-                                        'Zapisuje w evernote rzeczy z bookmarków',
-                                        key
-                                    );
-                                    props.addTask(
-                                        'Zapisuje strony które obejrzę na małej karteczce',
-                                        key
-                                    );
-                                    props.addTask(
-                                        'Oglądam okno 20min 2x lub 1.75x + zaznaczam bookmarki',
-                                        key
-                                    );
-                                    props.addTask(
-                                        'Zapisuje w evernote rzeczy z bookmarków',
-                                        key
-                                    );
-                                }}
+                                // onClick={}
                                 title="Dodaj Okno nauki"
                                 variant="primary"
                                 id={`dropdown-split-variants-primary`}>
@@ -228,28 +228,57 @@ const Dashboard = (props) => {
                                 />
                                 <FaPlus onClick={onTaskSubmit} />
                             </InputContainer>
-                            {panel.map(({ id, name }) => (
-                                <Tab.Pane key={id} eventKey={id}>
-                                    <DndProvider backend={Backend}>
-                                        {props.data.tasks &&
-                                            cards
-                                                // .filter((e) => e.dayId === key)
-                                                .map((e, i) => {
-                                                    return (
-                                                        <Task
-                                                            index={i}
-                                                            moveCard={moveCard}
-                                                            key={e.id}
-                                                            id={e.id}
-                                                            value={e.value}
-                                                            number={i + 1}
-                                                            done={e.done}
-                                                        />
-                                                    );
-                                                })}
-                                    </DndProvider>
-                                </Tab.Pane>
-                            ))}
+                            <DragDropContext onDragEnd={onDragEnd}>
+                                <Droppable droppableId="droppable">
+                                    {(provided, snapshot) => (
+                                        <div
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                            style={getListStyle(
+                                                snapshot.isDraggingOver
+                                            )}>
+                                            {items.length &&
+                                                items.map((item, index) => (
+                                                    <Draggable
+                                                        key={item.id}
+                                                        draggableId={item.id}
+                                                        index={index}>
+                                                        {(
+                                                            provided,
+                                                            snapshot
+                                                        ) => (
+                                                            <Task
+                                                                taskId={taskId}
+                                                                currentTaskId={
+                                                                    item.id
+                                                                }
+                                                                isDone={
+                                                                    item.done
+                                                                }
+                                                                number={index}
+                                                                refe={
+                                                                    provided.innerRef
+                                                                }
+                                                                {...provided.draggableProps}
+                                                                {...provided.dragHandleProps}
+                                                                style={getItemStyle(
+                                                                    snapshot.isDragging,
+                                                                    provided
+                                                                        .draggableProps
+                                                                        .style
+                                                                )}
+                                                                value={
+                                                                    item.value
+                                                                }
+                                                            />
+                                                        )}
+                                                    </Draggable>
+                                                ))}
+                                            {provided.placeholder}
+                                        </div>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
                         </Tab.Content>
                     </Col>
                 </Row>
@@ -260,19 +289,20 @@ const Dashboard = (props) => {
 
 const mapStateToProps = (state) => {
     return {
-        data: state.firestore.ordered,
+        tasks: state.firestore.ordered.tasks,
+        auth: state.firebase.auth,
     };
 };
 
 export default compose(
     connect(
         mapStateToProps,
-        { addTask }
+        { addTask, reorderTasks }
     ),
-    firestoreConnect([
-        {
-            collection: 'tasks',
-            orderBy: ['done', 'asc'],
-        },
-    ])
+    firestoreConnect((props) => {
+        if (!props.auth.uid) return [];
+        return [
+            { collection: 'tasks', where: [['uid', '==', props.auth.uid]] },
+        ];
+    })
 )(Dashboard);

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import Moment from 'react-moment';
 import Aux from '../../hoc/_Aux';
 import { Form, Button, Dropdown, Card } from 'react-bootstrap';
+import Range from '../../App/components/Range';
 import { connect } from 'react-redux';
 import { updateSummary } from '../../store/actions';
 import { firestoreConnect } from 'react-redux-firebase';
@@ -15,14 +16,11 @@ const Container = styled.div`
     /* display: flex; */
 `;
 const ItemContainer = styled.div`
-    display: flex;
-    align-items: center;
+    /* display: flex; */
+    /* align-items: center; */
     /* justify-content: center; */
 `;
-const DropdownContainer = styled.div`
-    width: 50px;
-    margin-left: 30px;
-`;
+
 const CardsContainer = styled.div`
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -48,37 +46,37 @@ const StyledGold = styled(GiGoldBar)`
     color: #ffd700;
 `;
 const DaySummary = (props) => {
-    const [zgValue, setZgValue] = useState('');
     const [mistakesNote, setMistakesNote] = useState('');
     const [goodThingsNote, setGoodThingsNote] = useState('');
     const [learnedNote, setLearnedNote] = useState('');
-    //nie dziala
+    localStorage.removeItem('summaryId');
+    if (props.day) {
+        var [currentDay] = props.day;
+    }
+
     useEffect(
         () => {
-            if (props.data.daySummary) {
-                setMistakesNote(props.data.daySummary[0].mistakesNote);
-                setGoodThingsNote(props.data.daySummary[0].goodThingsNote);
-                setLearnedNote(props.data.daySummary[0].learnedNote);
+            if (currentDay) {
+                setMistakesNote(currentDay.daySummary.mistakes_note);
+                setGoodThingsNote(currentDay.daySummary.good_things_note);
+                setLearnedNote(currentDay.daySummary.learned_note);
             }
         },
-        [props.data]
+        [currentDay]
     );
 
     const handleSubmit = () => {
         const data = {
-            mistakesNote,
-            goodThingsNote,
-            learnedNote,
-            zgValue,
+            planned_work_blocks: currentDay.daySummary.planned_work_blocks,
+            mistakes_note: mistakesNote,
+            good_things_note: goodThingsNote,
+            learned_note: learnedNote,
         };
 
-        localStorage.getItem('summaryId')
-            ? props.updateSummary(data, localStorage.getItem('summaryId'))
-            : props.updateSummary(data);
+        props.updateSummary(data);
     };
 
     const dateToFormat = new Date();
-    // console.log(props.data);
 
     return (
         <Aux>
@@ -86,80 +84,93 @@ const DaySummary = (props) => {
                 <Label>
                     Podsumowanie dnia:
                     <Span>
-                        <Moment format="dddd MMMM YYYY">{dateToFormat}</Moment>
+                        <Moment format="dddd DD/MM YYYY">{dateToFormat}</Moment>
                     </Span>
                 </Label>
+                <ItemContainer>
+                    <h1>
+                        Start Dnia:
+                        {currentDay &&
+                            moment(currentDay.created_at).format('HH:mm')}
+                    </h1>
+                    <h1>
+                        Ilość Godzin zaplanowanych:
+                        {currentDay &&
+                            currentDay.daySummary.planned_work_blocks}
+                    </h1>
+                    <h1>
+                        Ilość Godzin zrobionych:
+                        {currentDay && currentDay.workBlocks.length}
+                    </h1>
 
-                <>
-                    <ItemContainer>
-                        <Label>Ilość zaplanowanych ZG:</Label>
-                        <DropdownContainer>
-                            <Form.Control
-                                as="select"
-                                className="mb-3"
-                                onChange={(e) => setZgValue(e.target.value)}
-                                value={zgValue}>
-                                <option>0</option>
-                                <option>1</option>
-                                <option>2</option>
-                                <option>3</option>
-                                <option>4</option>
-                                <option>5</option>
-                                <option>6</option>
-                                <option>7</option>
-                                <option>8</option>
-                            </Form.Control>
-                        </DropdownContainer>
-                        <Label>Ilość Wykonanych ZG: </Label>
-                        <Label>{props.data.zg && props.data.zg.length}</Label>
-                    </ItemContainer>
-                    <CardsContainer>
-                        {props.data.zg &&
-                            props.data.zg.map((zg, index) => {
-                                return (
-                                    <div className="border p-1 m-1" key={zg.id}>
-                                        <Card.Body className="border-bottom">
-                                            <div className="row align-items-center justify-content-center">
-                                                <div className="col-auto">
-                                                    <h4>{index + 1}</h4>
-                                                </div>
-                                                <div className="col-auto">
-                                                    {zg.isGold && (
-                                                        <StyledGold />
-                                                    )}
-                                                </div>
-                                                <div className="col text-right">
-                                                    <h4>
-                                                        od{' '}
-                                                        {moment(zg.createdAt)
-                                                            .subtract(
-                                                                50,
-                                                                'minutes'
-                                                            )
-                                                            .format('HH:mm')}
-                                                    </h4>
-                                                    <h4>
-                                                        do{' '}
-                                                        {moment(
-                                                            zg.createdAt
-                                                        ).format('HH:mm')}
-                                                    </h4>
-                                                </div>
-                                                <p className=" mb-0">
-                                                    <span className="text-muted">
-                                                        {zg.note}
-                                                    </span>
-                                                </p>
+                    <div
+                        className="progress"
+                        style={{
+                            border: '1px solid ',
+                            borderImageSlice: 1,
+                            borderImageSource:
+                                'linear-gradient(-135deg, #1de9b6 0%, #1dc4e9 100%)',
+                        }}>
+                        <div
+                            className="progress-bar progress-c-theme"
+                            role="progressbar"
+                            style={{
+                                width: `${currentDay &&
+                                    (currentDay.workBlocks.length * 100) /
+                                        currentDay.daySummary
+                                            .planned_work_blocks}%`,
+                            }}>
+                            {currentDay &&
+                                Math.round(
+                                    (currentDay.workBlocks.length * 100) /
+                                        currentDay.daySummary
+                                            .planned_work_blocks
+                                )}
+                            %
+                        </div>
+                    </div>
+                </ItemContainer>
+                <CardsContainer>
+                    {currentDay &&
+                        currentDay.workBlocks.map((zg, index) => {
+                            return (
+                                <div className="border p-1 m-1" key={zg.id}>
+                                    <Card.Body className="border-bottom">
+                                        <div className="row align-items-center justify-content-center">
+                                            <div className="col-auto">
+                                                <h4>{index + 1}</h4>
                                             </div>
-                                        </Card.Body>
+                                            <div className="col-auto">
+                                                {zg.isGold && <StyledGold />}
+                                            </div>
+                                            <div className="col text-right">
+                                                <h4>
+                                                    od{' '}
+                                                    {moment(zg.createdAt)
+                                                        .subtract(50, 'minutes')
+                                                        .format('HH:mm')}
+                                                </h4>
+                                                <h4>
+                                                    do{' '}
+                                                    {moment(
+                                                        zg.createdAt
+                                                    ).format('HH:mm')}
+                                                </h4>
+                                            </div>
+                                            <p className=" mb-0">
+                                                <span className="text-muted">
+                                                    {zg.note}
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </Card.Body>
 
-                                        <Card.Body>
-                                            <div className="row align-items-center justify-content-center card-active">
-                                                {props.data.monitoring &&
-                                                    Object.keys(
-                                                        zg.rangeData
-                                                    ).map((item) => {
-                                                        const current = props.data.monitoring.find(
+                                    <Card.Body>
+                                        <div className="row align-items-center justify-content-center card-active">
+                                            {props.monitoring &&
+                                                Object.keys(zg.rangeData).map(
+                                                    (item) => {
+                                                        const current = props.monitoring.find(
                                                             (
                                                                 currentMonitoring
                                                             ) =>
@@ -208,62 +219,58 @@ const DaySummary = (props) => {
                                                                 </div>
                                                             </div>
                                                         );
-                                                    })}
-                                            </div>
-                                        </Card.Body>
-                                    </div>
-                                );
-                            })}
-                    </CardsContainer>
-                    <Form.Group controlId="1">
-                        <Form.Label>Czego się dzisiaj nauczyłem ?</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows="3"
-                            value={learnedNote}
-                            onChange={(e) => setLearnedNote(e.target.value)}
-                        />
-                    </Form.Group>
-                    <Form.Group controlId="1">
-                        <Form.Label>
-                            Jakie były błedy ktore popełniłem danego dnia ?
-                        </Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows="3"
-                            value={mistakesNote}
-                            onChange={(e) => setMistakesNote(e.target.value)}
-                        />
-                    </Form.Group>
-                    <Form.Group controlId="1">
-                        <Form.Label>
-                            Co zrobiłem dobrze i mogę zrobić aby być bardziej
-                            skutecznym ?
-                        </Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows="3"
-                            value={goodThingsNote}
-                            onChange={(e) => setGoodThingsNote(e.target.value)}
-                        />
-                    </Form.Group>
+                                                    }
+                                                )}
+                                        </div>
+                                    </Card.Body>
+                                </div>
+                            );
+                        })}
+                </CardsContainer>
+                <Form.Group controlId="1">
+                    <Form.Label>Czego się dzisiaj nauczyłem ?</Form.Label>
+                    <Form.Control
+                        as="textarea"
+                        rows="3"
+                        value={learnedNote}
+                        onChange={(e) => setLearnedNote(e.target.value)}
+                    />
+                </Form.Group>
+                <Form.Group controlId="1">
+                    <Form.Label>
+                        Jakie były błedy ktore popełniłem danego dnia ?
+                    </Form.Label>
+                    <Form.Control
+                        as="textarea"
+                        rows="3"
+                        value={mistakesNote}
+                        onChange={(e) => setMistakesNote(e.target.value)}
+                    />
+                </Form.Group>
+                <Form.Group controlId="1">
+                    <Form.Label>
+                        Co zrobiłem dobrze i mogę zrobić aby być bardziej
+                        skutecznym ?
+                    </Form.Label>
+                    <Form.Control
+                        as="textarea"
+                        rows="3"
+                        value={goodThingsNote}
+                        onChange={(e) => setGoodThingsNote(e.target.value)}
+                    />
+                </Form.Group>
 
-                    <StyledButton variant="primary" onClick={handleSubmit}>
-                        Zapisz
-                    </StyledButton>
-                    <StyledButton
-                        variant="secondary"
-                        onClick={() => localStorage.removeItem('summaryId')}>
-                        Zakończ dzień
-                    </StyledButton>
-                </>
+                <StyledButton variant="primary" onClick={handleSubmit}>
+                    Zapisz
+                </StyledButton>
             </Container>
         </Aux>
     );
 };
 const mapStateToProps = (state) => {
     return {
-        data: state.firestore.ordered,
+        day: state.firestore.ordered.days,
+        monitoring: state.firestore.ordered.monitoring,
     };
 };
 export default compose(
@@ -273,19 +280,8 @@ export default compose(
     ),
     firestoreConnect([
         {
-            collection: 'zg',
-            where: [
-                'createdAt',
-                '>',
-                moment()
-                    .hour(1)
-                    .format(),
-            ],
-            orderBy: ['createdAt', 'asc'],
-        },
-        {
-            collection: 'daySummary',
-            doc: localStorage.getItem('summaryId'),
+            collection: 'days',
+            doc: localStorage.getItem('day_id'),
         },
         {
             collection: 'monitoring',

@@ -23,7 +23,7 @@ const SignUp1 = (props) => {
         return <Redirect to="/" />;
     }
     return (
-        <Aux>
+        <>
             <Breadcrumb />
             <div className="auth-wrapper">
                 <div className="auth-content">
@@ -98,7 +98,7 @@ const SignUp1 = (props) => {
                     </div>
                 </div>
             </div>
-        </Aux>
+        </>
     );
 };
 

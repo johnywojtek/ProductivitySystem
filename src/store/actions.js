@@ -16,67 +16,85 @@ export const ADD_WEEKPLAN = 'ADD_WEEKPLAN';
 export const SIGNUP_SUCCESS = 'SIGNUP_SUCCESS';
 export const SIGNUP_ERROR = 'SIGNUP_ERROR';
 
+export const DAY_START = 'DAY_START';
+
 export const addZg = (payload) => (
-    getState,
     dispatch,
+    getState,
+    { getFirebase, getFirestore }
+) => {
+    const firestore = getFirestore();
+    firestore
+        .collection('days')
+        .doc(localStorage.getItem('day_id'))
+        .update(payload)
+        .then(() => dispatch({ type: ADD_ZG, payload }))
+        .catch((err) => console.log(err));
+};
+
+export const dayStart = (uid, workBlocksCount) => (
+    dispatch,
+    getState,
     { getFirebase, getFirestore }
 ) => {
     const firestore = getFirestore();
 
     firestore
-        .collection('zg')
+        .collection('days')
         .add({
-            ...payload,
-            createdAt: moment().format(),
+            uid,
+            created_at: moment().format(),
+            workBlocks: [],
+            daySummary: {
+                planned_work_blocks: workBlocksCount,
+                good_things_note: '',
+                learned_note: '',
+                mistakes_note: '',
+            },
         })
-        .then(() => dispatch({ type: ADD_ZG, payload }))
+        .then((e) => {
+            localStorage.setItem('day_id', e.id);
+            localStorage.setItem(
+                'day_created_date',
+                moment().format('DD/MM/YYYY')
+            );
+            dispatch({ type: DAY_START });
+        })
         .catch((err) => console.log(err));
 };
 
-export const updateSummary = (payload, id = null) => (
-    getState,
+export const updateSummary = (payload) => (
     dispatch,
-    { getFirebase, getFirestore }
-) => {
-    const firestore = getFirestore();
-    if (!id) {
-        firestore
-            .collection('daySummary')
-            .add({ ...payload, createdAt: moment().format() })
-            .then((e) => {
-                localStorage.setItem('summaryId', e.id);
-                dispatch({
-                    type: CREATE_SUMMARY,
-                });
-            })
-            .catch((err) => console.log(err));
-    } else {
-        firestore
-            .collection('daySummary')
-            .doc(id)
-            .update({ ...payload })
-            .then(() => dispatch({ type: UPDATE_SUMMARY, payload }))
-            .catch((err) => console.log(err));
-    }
-};
-
-export const addTask = (taskValue, dayId = null) => (
     getState,
-    dispatch,
     { getFirebase, getFirestore }
 ) => {
     const firestore = getFirestore();
 
-    firestore.collection('tasks').add({
-        dayId,
-        value: taskValue,
-        done: false,
-        createdAt: moment().format(),
-    });
+    firestore
+        .collection('days')
+        .doc(localStorage.getItem('day_id'))
+        .update({ daySummary: { ...payload } })
+        .then(() => dispatch({ type: UPDATE_SUMMARY, payload }))
+        .catch((err) => console.log(err));
 };
-export const toggleTask = (taskId, taskState) => (
-    getState,
+
+export const addTask = (tasks, taskId) => (
     dispatch,
+    getState,
+    { getFirebase, getFirestore }
+) => {
+    const firestore = getFirestore();
+    firestore
+        .collection('tasks')
+        .doc(taskId)
+        .update({
+            tasks,
+        });
+};
+
+export const toggleTask = (taskId, currentTaskId, taskState) => (
+    dispatch,
+    getState,
     { getFirebase, getFirestore }
 ) => {
     const firestore = getFirestore();
@@ -85,29 +103,49 @@ export const toggleTask = (taskId, taskState) => (
         .collection('tasks')
         .doc(taskId)
         .update({
-            done: taskState,
+            tasks: getState().firestore.data.tasks[taskId].tasks.map((task) =>
+                task.id == currentTaskId ? { ...task, done: taskState } : task
+            ),
         });
 };
-export const addWeekPlan = (payload) => (
-    getState,
+
+export const addWeeklyTasks = (tasks, type, taskId) => (
     dispatch,
+    getState,
     { getFirebase, getFirestore }
 ) => {
     const firestore = getFirestore();
 
     firestore
-        .collection('weekPlan')
-        .add({ ...payload, createdAt: moment().format() })
-        .then(() => dispatch({ type: ADD_ZG, payload }))
+        .collection('weeklyTasks')
+        .doc(taskId)
+        .update({
+            secondaryTasks: tasks,
+        })
+        .then((res) => console.log(res))
         .catch((err) => console.log(err));
 };
+export const reorderTasks = (updatedTasks, taskId) => (
+    dispatch,
+    getState,
+    { getFirebase, getFirestore }
+) => {
+    const firestore = getFirestore();
 
+    firestore
+        .collection('tasks')
+        .doc(taskId)
+        .update({ tasks: updatedTasks })
+        .then(() => dispatch({ type: ADD_ZG }))
+        .catch((err) => console.log(err));
+};
 export const signIn = (credentials) => (
     dispatch,
     getstate,
     { getFirebase }
 ) => {
     const firebase = getFirebase();
+    console.log(credentials);
 
     firebase
         .auth()
@@ -120,6 +158,20 @@ export const signIn = (credentials) => (
         });
 };
 
+export const changeLevel = (level, userId) => (
+    dispatch,
+    getState,
+    { getFirebase, getFirestore }
+) => {
+    const firestore = getFirestore();
+
+    firestore
+        .collection('users')
+        .doc(userId)
+        .update({ currentLevel: level })
+        .then(() => dispatch({ type: ADD_ZG }))
+        .catch((err) => console.log(err));
+};
 export const signOut = () => (dispatch, getstate, { getFirebase }) => {
     const firebase = getFirebase();
 
@@ -138,15 +190,28 @@ export const signUp = (credentials) => (
 ) => {
     const firebase = getFirebase();
     const firestore = getFirestore();
-
+    const addTask = (userId, dayId) => {
+        return firestore.collection('tasks').add({
+            uid: userId,
+            dayId,
+            tasks: [],
+        });
+    };
     firebase
         .auth()
         .createUserWithEmailAndPassword(credentials.email, credentials.password)
         .then((res) => {
-            return firestore
+            firestore
                 .collection('users')
                 .doc(res.user.uid)
-                .set({ userName: credentials.userName });
+                .set({
+                    userName: credentials.userName,
+                    currentLevel: false,
+                    isDayEnd: false,
+                });
+            for (let i = 0; i < 7; i++) {
+                addTask(res.user.uid, i);
+            }
         })
         .then(() => {
             dispatch({ type: SIGNUP_SUCCESS });

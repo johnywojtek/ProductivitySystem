@@ -24,10 +24,13 @@ const createStoreWithMiddleware = createStore(
         reduxFirestore(firebase, fbConfig)
     )
 );
-
+const rffConfig = {
+    useFirestoreForProfile: true,
+    userProfile: 'users',
+};
 const rrfProps = {
     firebase,
-    config: fbConfig,
+    config: rffConfig,
     dispatch: createStoreWithMiddleware.dispatch,
     createFirestoreInstance,
 };
@@ -35,7 +38,7 @@ const rrfProps = {
 const app = (
     <Provider store={createStoreWithMiddleware}>
         <ReactReduxFirebaseProvider {...rrfProps}>
-            <BrowserRouter basename={config.basename}>
+            <BrowserRouter>
                 {/* basename="/datta-able" */}
                 <App />
             </BrowserRouter>

@@ -15,6 +15,7 @@
     "node-sass": "^4.12.0",
     "prop-types": "^15.7.2",
     "react": "^16.8.4",
+    "react-beautiful-dnd": "^13.0.0",
     "react-bootstrap": "^1.0.0-beta.5",
     "react-dnd": "^10.0.2",
     "react-dnd-html5-backend": "^10.0.2",
@@ -29,14 +30,15 @@
     "react-redux": "^6.0.1",
     "react-redux-firebase": "^3.1.2",
     "react-reveal": "^1.2.2",
-    "react-router-dom": "^4.3.1",
+    "react-router-dom": "^5.2.0",
     "react-scripts": "^3.0.0",
     "react-window-size": "^1.2.2",
     "redux": "^4.0.1",
     "redux-firestore": "^0.13.0",
     "redux-thunk": "^2.3.0",
     "styled-components": "^5.0.1",
-    "sweetalert2": "^9.10.12"
+    "sweetalert2": "^9.10.12",
+    "uuidv4": "^6.1.1"
   },
   "scripts": {
     "start": "react-scripts start",

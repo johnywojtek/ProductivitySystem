@@ -7,6 +7,13 @@ export default {
             icon: 'icon-navigation',
             children: [
                 {
+                    id: 'summary',
+                    title: 'summary',
+                    type: 'item',
+                    url: '/summary',
+                    icon: 'feather icon-home',
+                },
+                {
                     id: 'Main',
                     title: 'Main',
                     type: 'item',

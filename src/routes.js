@@ -6,12 +6,14 @@ window.$ = $;
 global.jQuery = $;
 
 const DashboardDefault = React.lazy(() => import('./Demo/Dashboard/Default'));
+const DayStart = React.lazy(() => import('./Pages/Main/DayStart'));
 const Planner = React.lazy(() => import('./Pages/Main/Planner'));
 const Mission = React.lazy(() => import('./Pages/Main/Mission'));
 const Main = React.lazy(() => import('./Pages/Main'));
 const WeekPlan = React.lazy(() => import('./Pages/Main/WeekPlan'));
 const CurrentTask = React.lazy(() => import('./Pages/Main/CurrentTask'));
 const DaySummary = React.lazy(() => import('./Pages/Main/DaySummary'));
+const Summary = React.lazy(() => import('./Pages/Main/AllSummary'));
 
 const UIBasicButton = React.lazy(() =>
     import('./Demo/UIElements/Basic/Button')
@@ -50,6 +52,18 @@ const routes = [
         exact: true,
         name: 'Default',
         component: DashboardDefault,
+    },
+    {
+        path: '/summary',
+        exact: true,
+        name: 'Default',
+        component: Summary,
+    },
+    {
+        path: '/day-start',
+        exact: true,
+        name: 'DayStart',
+        component: DayStart,
     },
     {
         path: '/week-plan',

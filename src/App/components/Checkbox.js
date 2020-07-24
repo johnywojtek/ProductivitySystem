@@ -102,10 +102,12 @@ const LabelCheck = styled.span`
         `}
 `;
 
-const Checkbox = ({ id, isDone, toggleTask }) => {
+const Checkbox = ({ taskId, currentTaskId, isDone, toggleTask }) => {
     const onCheckboxClick = () => {
-        if (id) {
-            isDone ? toggleTask(id, false) : toggleTask(id, true);
+        if (currentTaskId) {
+            isDone
+                ? toggleTask(taskId, currentTaskId, false)
+                : toggleTask(taskId, currentTaskId, true);
         } else {
             Swal.fire({
                 icon: 'error',

@@ -8,8 +8,9 @@ import { addZg } from '../../store/actions';
 import { firestoreConnect } from 'react-redux-firebase';
 import { compose } from 'redux';
 import Swal from 'sweetalert2';
+import { uuid } from 'uuidv4';
+import { Redirect, useHistory } from 'react-router-dom';
 import moment from 'moment';
-import { Redirect } from 'react-router-dom';
 
 const Container = styled.div`
     display: flex;
@@ -37,7 +38,7 @@ const Dashboard = (props) => {
     const [note, setNote] = useState('');
     const [isGold, setIsGold] = useState(false);
     const [alert, setAlert] = useState(false);
-
+    const history = useHistory();
     const rangeData = {};
 
     const currentValue = (currVal, id) => {
@@ -46,12 +47,22 @@ const Dashboard = (props) => {
 
     const handleSubmit = () => {
         const zg = {
+            id: uuid(),
             rangeData,
+            createdAt: moment().format(),
             breakId,
             note,
             isGold,
         };
-        props.addZg(zg);
+        const [currentDay] = props.currentDay;
+        const blocks = currentDay.workBlocks;
+        console.log(currentDay, blocks);
+        const newBlocks = {
+            ...currentDay,
+            workBlocks: [...blocks, zg],
+        };
+
+        props.addZg(newBlocks);
         setBreakId(0);
         setNote('');
         setIsGold(false);
@@ -65,16 +76,17 @@ const Dashboard = (props) => {
             showConfirmButton: false,
             timer: 1000,
             timerProgressBar: true,
-        });
+        }).then((e) => history.push('/day-summary'));
     };
     // if(props.auth.uid){}
     // if(!props.auth.uid) {
     //     return <Redirect to="/auth/signin-1">
     // }
-
+    if (!props.auth.uid) {
+        return <Redirect to="/auth/signin-1" />;
+    }
     return (
         <Aux>
-            {!props.auth.uid && <Redirect to="/auth/signin-1" />}
             <Container>
                 <RangeContainer>
                     {props.listOfItemsToMonitoring &&
@@ -162,6 +174,7 @@ const mapStateToProps = (state) => {
         breaks: state.firestore.ordered.breaks,
         listOfItemsToMonitoring: state.firestore.ordered.monitoring,
         auth: state.firebase.auth,
+        currentDay: state.firestore.ordered.days,
     };
 };
 export default compose(
@@ -172,6 +185,10 @@ export default compose(
     firestoreConnect([
         {
             collection: 'breaks',
+        },
+        {
+            collection: 'days',
+            doc: localStorage.getItem('day_id'),
         },
         {
             collection: 'monitoring',
