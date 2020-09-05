@@ -58,7 +58,7 @@ const Range = ({ id, title, color, minDesc, maxDesc, first, currentValue }) => {
                 step={10}
                 min={0}
                 max={100}
-                onChange={values => setValues(values)}
+                onChange={(values) => setValues(values)}
                 renderTrack={({ props, children }) => (
                     <div
                         onMouseDown={props.onMouseDown}
@@ -67,7 +67,7 @@ const Range = ({ id, title, color, minDesc, maxDesc, first, currentValue }) => {
                             ...props.style,
                             height: '36px',
                             display: 'flex',
-                            width: '100%'
+                            width: '100%',
                         }}>
                         <div
                             ref={props.ref}
@@ -79,12 +79,12 @@ const Range = ({ id, title, color, minDesc, maxDesc, first, currentValue }) => {
                                     values: values,
                                     colors: [
                                         `hsl(${color} ${currColor[0]}%)`,
-                                        '#ccc'
+                                        '#ccc',
                                     ],
                                     min: 0,
-                                    max: 100
+                                    max: 100,
                                 }),
-                                alignSelf: 'center'
+                                alignSelf: 'center',
                             }}>
                             {children}
                         </div>
@@ -94,8 +94,9 @@ const Range = ({ id, title, color, minDesc, maxDesc, first, currentValue }) => {
                     <div
                         {...props}
                         style={{
-                            ...props.style
-                        }}></div>
+                            ...props.style,
+                        }}
+                    />
                 )}
             />
         </Container>

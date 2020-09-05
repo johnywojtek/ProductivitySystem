@@ -2,11 +2,13 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Dropdown } from 'react-bootstrap';
 import windowSize from 'react-window-size';
-
+import { firestoreConnect } from 'react-redux-firebase';
+import { compose } from 'redux';
 import NavSearch from './NavSearch';
 import Aux from '../../../../../hoc/_Aux';
 import DEMO from '../../../../../store/constant';
 import * as actionTypes from '../../../../../store/actions';
+import ProgressBar from '../../../../components/ProgressBar';
 
 class NavLeft extends Component {
     render() {
@@ -35,42 +37,12 @@ class NavLeft extends Component {
                             <i className={iconFullScreen.join(' ')} />
                         </a>
                     </li>
-                    <li className={navItemClass.join(' ')}>
-                        <Dropdown alignRight={dropdownRightAlign}>
-                            <Dropdown.Toggle
-                                variant={'link'}
-                                id="dropdown-basic">
-                                Dropdown
-                            </Dropdown.Toggle>
-                            <ul>
-                                <Dropdown.Menu>
-                                    <li>
-                                        <a
-                                            className="dropdown-item"
-                                            href={DEMO.BLANK_LINK}>
-                                            Action
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a
-                                            className="dropdown-item"
-                                            href={DEMO.BLANK_LINK}>
-                                            Another action
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a
-                                            className="dropdown-item"
-                                            href={DEMO.BLANK_LINK}>
-                                            Something else here
-                                        </a>
-                                    </li>
-                                </Dropdown.Menu>
-                            </ul>
-                        </Dropdown>
-                    </li>
-                    <li className="nav-item">
-                        <NavSearch />
+                    <li>
+                        <ProgressBar
+                            currentAmount={5}
+                            maxAmount={25}
+                            dateToEnd={'2020-06-06T12:34:52+02:00'}
+                        />
                     </li>
                 </ul>
             </Aux>
@@ -78,20 +50,27 @@ class NavLeft extends Component {
     }
 }
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
     return {
         isFullScreen: state.appState.isFullScreen,
-        rtlLayout: state.appState.rtlLayout
+        rtlLayout: state.appState.rtlLayout,
     };
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
     return {
-        onFullScreen: () => dispatch({ type: actionTypes.FULL_SCREEN })
+        onFullScreen: () => dispatch({ type: actionTypes.FULL_SCREEN }),
     };
 };
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
+export default compose(
+    connect(
+        mapStateToProps,
+        mapDispatchToProps
+    ),
+    firestoreConnect([
+        {
+            collection: 'users',
+        },
+    ])
 )(windowSize(NavLeft));

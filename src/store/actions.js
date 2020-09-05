@@ -24,12 +24,23 @@ export const addZg = (payload) => (
     { getFirebase, getFirestore }
 ) => {
     const firestore = getFirestore();
+
     firestore
         .collection('days')
         .doc(localStorage.getItem('day_id'))
         .update(payload)
         .then(() => dispatch({ type: ADD_ZG, payload }))
         .catch((err) => console.log(err));
+
+    if (payload.workBlocks.pop().isGold) {
+        console.log(payload);
+        firestore
+            .collection('users')
+            .doc(payload.uid)
+            .update({ currentAmountIZG: firestore.FieldValue.increment(1) })
+            .then(() => dispatch({ type: ADD_ZG, payload }))
+            .catch((err) => console.log(err));
+    }
 };
 
 export const dayStart = (uid, workBlocksCount) => (

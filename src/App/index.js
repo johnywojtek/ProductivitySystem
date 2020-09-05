@@ -9,16 +9,26 @@ import Aux from '../hoc/_Aux';
 import ScrollToTop from './layout/ScrollToTop';
 import routes from '../route';
 
+import { connect } from 'react-redux';
+import { firestoreConnect } from 'react-redux-firebase';
+import { compose } from 'redux';
+
 const AdminLayout = Loadable({
     loader: () => import('./layout/AdminLayout'),
     loading: Loader,
 });
-const App = () => {
+const App = (props) => {
     const history = useHistory();
 
     useEffect(() => {
         const current_date = moment().format('DD/MM/YYYY');
+        if (!props.auth.uid) {
+            return history.push('/auth/signin-1');
+        }
         history.listen((location, action) => {
+            if (!props.auth.uid) {
+                return history.push('/auth/signin-1');
+            }
             // console.log(
             //     `The current URL is ${location.pathname}${location.search}${
             //         location.hash
@@ -27,9 +37,10 @@ const App = () => {
             // console.log(`The last navigation action was ${action}`);
             // console.log(location.pathname); // check which is current pathname
             // localStorage.removeItem('day_created_date');
-
+            console.log(history);
             if (
                 //Dodać ifa czy jest zalogowany poniewaz powoduje blad gdy user sie wyloguje zawsze przenosi do /day-start
+                // props.auth.uid &&
                 location.pathname !== '/day-start' &&
                 current_date !== localStorage.getItem('day_created_date')
             ) {
@@ -65,5 +76,16 @@ const App = () => {
         </Aux>
     );
 };
-
-export default App;
+const mapStateToProps = (state) => {
+    return {
+        auth: state.firebase.auth,
+    };
+};
+export default compose(
+    connect(mapStateToProps),
+    firestoreConnect([
+        {
+            collection: 'users',
+        },
+    ])
+)(App);

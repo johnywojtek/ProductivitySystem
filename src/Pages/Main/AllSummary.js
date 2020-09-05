@@ -201,6 +201,7 @@ export default compose(
     firestoreConnect([
         {
             collection: 'days',
+            orderBy: 'created_at',
         },
         {
             collection: 'monitoring',

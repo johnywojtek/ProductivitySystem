@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { createStore, applyMiddleware, compose } from 'redux';
 import { Provider } from 'react-redux';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import {
     createFirestoreInstance,
     getFirestore,
@@ -16,6 +16,7 @@ import firebase from 'firebase/app';
 import * as serviceWorker from './serviceWorker';
 import reducer from './store/reducer';
 import config from './config';
+import { createBrowserHistory } from 'history';
 
 const createStoreWithMiddleware = createStore(
     reducer,
@@ -35,13 +36,15 @@ const rrfProps = {
     createFirestoreInstance,
 };
 
+const createHistory = createBrowserHistory();
+
 const app = (
     <Provider store={createStoreWithMiddleware}>
         <ReactReduxFirebaseProvider {...rrfProps}>
-            <BrowserRouter>
+            <HashRouter history={createHistory}>
                 {/* basename="/datta-able" */}
                 <App />
-            </BrowserRouter>
+            </HashRouter>
         </ReactReduxFirebaseProvider>
     </Provider>
 );

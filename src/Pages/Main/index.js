@@ -40,6 +40,7 @@ const Dashboard = (props) => {
     const [alert, setAlert] = useState(false);
     const history = useHistory();
     const rangeData = {};
+    let firstCheckIfIsIZG = false;
 
     const currentValue = (currVal, id) => {
         rangeData[id] = currVal;
@@ -54,6 +55,7 @@ const Dashboard = (props) => {
             note,
             isGold,
         };
+
         const [currentDay] = props.currentDay;
         const blocks = currentDay.workBlocks;
         console.log(currentDay, blocks);
@@ -61,22 +63,31 @@ const Dashboard = (props) => {
             ...currentDay,
             workBlocks: [...blocks, zg],
         };
+        if (!firstCheckIfIsIZG && !isGold) {
+            console.log(firstCheckIfIsIZG, 'before');
 
-        props.addZg(newBlocks);
-        setBreakId(0);
-        setNote('');
-        setIsGold(false);
+            firstCheckIfIsIZG = true;
 
-        Swal.fire({
-            icon: 'success',
-            title: 'Zapisano',
-            backdrop: false,
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 1000,
-            timerProgressBar: true,
-        }).then((e) => history.push('/day-summary'));
+            window.alert(
+                'Dlaczego nie była to złota godzina ? Co się rozproszyło ? -> Zapisz to w notatce ! :)'
+            );
+        } else {
+            props.addZg(newBlocks);
+            setBreakId(0);
+            setNote('');
+            setIsGold(false);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Zapisano',
+                backdrop: false,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1000,
+                timerProgressBar: true,
+            }).then((e) => history.push('/day-summary'));
+        }
     };
     // if(props.auth.uid){}
     // if(!props.auth.uid) {

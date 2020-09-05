@@ -8,7 +8,7 @@ const route = [
         path: '/auth/signup-1',
         exact: true,
         name: 'Signup 1',
-        component: SignUp1,
+        component: Signin1,
     },
     {
         path: '/auth/signin-1',
